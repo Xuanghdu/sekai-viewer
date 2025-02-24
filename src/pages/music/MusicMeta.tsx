@@ -34,7 +34,10 @@ const MusicMeta = () => {
   const { t } = useTranslation();
 
   const [metas] = useMusicMeta();
+  console.log(metas);
+
   const [musics] = useCachedData<IMusicInfo>("musics");
+  console.log(musics);
   const [musicDifficulties] =
     useCachedData<IMusicDifficultyInfo>("musicDifficulties");
 

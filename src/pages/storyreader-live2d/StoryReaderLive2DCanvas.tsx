@@ -13,11 +13,6 @@ import type {
 
 import StoryReaderLive2DStage from "./StoryReaderLive2DStage";
 
-//DEBUG
-//import { Box, Button, TextField } from "@mui/material";
-//import { SnippetAction, SpecialEffectType } from "../../types.d";
-//DEBUG/
-
 const StoryReaderLive2DCanvas: React.FC<{
   controllerData: ILive2DControllerData;
   settings: ILive2DPlayerSettings;
@@ -35,7 +30,7 @@ const StoryReaderLive2DCanvas: React.FC<{
   const [finished, setFinished] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [autoplayWaiting, setAutoplayWaiting] = useState(false);
-  const [canClick, setCanClick] = useState(true);
+  // const [canClick, setCanClick] = useState(true);
   const [loadStatus, setLoadStatus] = useState<LoadStatus>(LoadStatus.Ready);
 
   /**
@@ -62,6 +57,7 @@ const StoryReaderLive2DCanvas: React.FC<{
     }
     if (scenarioStep === -1) setFinished(true);
   }, [autoplayWaiting, playing, scenarioStep]);
+
   const nextStepAuto = useCallback(() => {
     if (!playing && scenarioStep !== -1) {
       setPlaying(true);
@@ -113,71 +109,81 @@ const StoryReaderLive2DCanvas: React.FC<{
       stage.current.controller.settings.text_animation = settings.textAnimation;
   }, [settings.textAnimation]);
 
-  //DEBUG
-  /*
-  const [inputStep, SetInputStep] = useState("");
-
-  const info = () => {
-    if (!controllerData) return null;
-    let ret = "";
-    const scenarioData = controllerData.scenarioData;
-    ret += SnippetAction[scenarioData.Snippets[scenarioStep].Action];
-    switch (scenarioData.Snippets[scenarioStep].Action) {
-      case SnippetAction.Talk: {
-        const sp = scenarioData.TalkData[scenarioData.Snippets[scenarioStep].ReferenceIndex];
-      } break;
-      case SnippetAction.CharacterLayout: {
-        const sp = scenarioData.LayoutData[scenarioData.Snippets[scenarioStep].ReferenceIndex];
-      } break;
-      case SnippetAction.CharacterMotion: {
-        const sp = scenarioData.LayoutData[scenarioData.Snippets[scenarioStep].ReferenceIndex];
-      } break;
-      case SnippetAction.SpecialEffect: {
-        const sp = scenarioData.SpecialEffectData[scenarioData.Snippets[scenarioStep].ReferenceIndex];
-        ret += " | " + SpecialEffectType[sp.EffectType];
-      } break;
-      case SnippetAction.Sound: {
-        const sp = scenarioData.SoundData[scenarioData.Snippets[scenarioStep].ReferenceIndex];
-      } break;
-    }
-    return ret;
-  }
-
-  function apply_action () {
-    stage.current?.controller.apply_action(scenarioStep);
-  }
-
-  function abort () {
-    stage.current?.controller.animate.abort();
-  }
-
-  function refresh () {
-    stage.current?.reloadStage();
-    setScenarioStep(0);
-    setPlaying(false);
-  }
-
-  function goto () {
-    setScenarioStep(parseInt(inputStep));
-  }
-
-  function handleStepChange (ev: any) {
-    SetInputStep(ev.target.value);
-  }
-  */
-  //DEBUG/
-
+  /**
+   * Handles left click to advance to the next step.
+   */
   const handlePlayClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    e.preventDefault();
-    if (loadStatus === LoadStatus.Loaded && canClick) {
+    // e.preventDefault();
+    // if (loadStatus === LoadStatus.Loaded && canClick) {
+    if (loadStatus === LoadStatus.Loaded) {
       nextStepClick();
-      setCanClick(false);
-      setTimeout(() => {
-        setCanClick(true);
-      }, 300);
+      // setCanClick(false);
+      // setTimeout(() => {
+      //   setCanClick(true);
+      // }, 300);
     }
   };
+
+  /**
+   * Handles right click to replay the previous audio step.
+   */
+  const handleRightClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (
+        loadStatus === LoadStatus.Loaded &&
+        // canClick &&
+        scenarioStep !== -1 &&
+        stage.current?.controller.lastAudioStep !== null
+      ) {
+        // Abort any ongoing animation.
+        stage.current?.controller.animate.abort();
+        // Replay the last audio action.
+        stage.current?.controller.apply_action(
+          stage.current.controller.lastAudioStep
+        );
+        // setCanClick(false);
+        // setTimeout(() => {
+        //   setCanClick(true);
+        // }, 300);
+      }
+    },
+    // [canClick, loadStatus, scenarioStep]
+    [loadStatus, scenarioStep]
+  );
+
+  /**
+   * Handles mouse wheel event.
+   * If the user scrolls upward (negative deltaY), we step back one scenario step.
+   */
+  const handleWheel = useCallback(
+    (e: React.WheelEvent) => {
+      // Check for upward scrolling (scroll back)
+      if (e.deltaY < 0) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        // if (loadStatus === LoadStatus.Loaded && canClick && scenarioStep > 0) {
+        if (loadStatus === LoadStatus.Loaded && scenarioStep > 0) {
+          // Abort any ongoing animation.
+          stage.current?.controller.animate.abort();
+          // Step back one scenario step.
+          const previousStep = scenarioStep - 1;
+          stage.current?.controller.apply_action(previousStep);
+          setScenarioStep(previousStep);
+          // setCanClick(false);
+          // setTimeout(() => {
+          //   setCanClick(true);
+          // }, 300);
+        }
+      }
+    },
+    // [canClick, loadStatus, scenarioStep]
+    [loadStatus, scenarioStep]
+  );
 
   const handleModelLoad = (status: LoadStatus) => {
     setLoadStatus(status);
@@ -230,6 +236,8 @@ const StoryReaderLive2DCanvas: React.FC<{
             autoDensity: true,
           }}
           onClick={handlePlayClick}
+          onContextMenu={handleRightClick} // Right click will replay current step.
+          onWheel={handleWheel}
         >
           {controllerData && (
             <StoryReaderLive2DStage
@@ -259,24 +267,6 @@ const StoryReaderLive2DCanvas: React.FC<{
           </Stack>
         )}
       </div>
-      {
-        //DEBUG
-        /*
-        <Box>
-          <Button variant="contained" disabled={playing} onClick={handlePlayClick}>Start Until Stop</Button>
-          <Button variant="contained" onClick={apply_action}>Start</Button>
-          <Button variant="contained" onClick={abort} disabled={!canClick}>Abort</Button>
-          <Button variant="contained" onClick={() => setScenarioStep(scenarioStep+1)}>Step</Button>
-          <Button variant="contained" onClick={() => setScenarioStep(scenarioStep-1)}>Back</Button>
-          <Button variant="contained" onClick={refresh}>refresh</Button>
-          <TextField variant="outlined" type="number" label="step" size="small" onChange={handleStepChange}></TextField>
-          <Button variant="contained" onClick={goto}>go!</Button>
-          <Typography>Current Step Index: {scenarioStep}</Typography>
-          <Typography>Current Step: {info()}</Typography>
-        </Box>
-        */
-        //DEBUG/
-      }
     </Stack>
   );
 };

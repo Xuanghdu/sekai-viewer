@@ -9,6 +9,6 @@ export default async function WhiteIn(
   const action_detail =
     controller.scenarioData.SpecialEffectData[action.ReferenceIndex];
   log.log("Live2DController", "SpecialEffect/WhiteIn", action, action_detail);
-  controller.layers.fullcolor.draw(0xffffff);
+  controller.layers.fullcolor.draw(0x000000);
   await controller.layers.fullcolor.hide(action_detail.Duration * 1000, true);
 }

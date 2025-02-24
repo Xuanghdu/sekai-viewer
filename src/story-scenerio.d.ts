@@ -241,6 +241,7 @@ export enum SpecialEffectType {
   BlackOut = 2,
   WhiteIn = 3,
   WhiteOut = 4,
+
   /**
    * shake background image and live2d
    * @param StringVal always empty string.

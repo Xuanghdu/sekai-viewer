@@ -21,6 +21,8 @@ import {
 import single_action from "./action";
 
 export class Live2DController extends Live2DPlayer {
+  public currentScenarioStep: number = 0;
+  public lastAudioStep: number | null = null;
   scenarioData: IScenarioData;
   scenarioResource: ILive2DCachedAsset[];
   modelData: ILive2DModelDataCollection[];
@@ -184,7 +186,8 @@ export class Live2DController extends Live2DPlayer {
         SnippetProgressBehavior.Now
       ) {
         // SnippetProgressBehavior = Now, push in the last list
-        action_list[action_list.length - 1].push(current);
+        // action_list[action_list.length - 1].push(current);
+        action_list.push([current]);
       } else {
         // SnippetProgressBehavior != Now, push a new list
         action_list.push([current]);
@@ -246,6 +249,8 @@ export class Live2DController extends Live2DPlayer {
     return is_end(current) ? -1 : current;
   };
   apply_action = async (step: number, delay_offset_ms = 0) => {
+    this.currentScenarioStep = step;
+    console.log("apply_action", step, delay_offset_ms);
     const action = this.scenarioData.Snippets[step];
     if (action.Delay > 0)
       await this.animate.delay(

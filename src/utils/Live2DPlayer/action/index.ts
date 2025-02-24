@@ -8,6 +8,7 @@ import action_sound from "./sound";
 import action_motion from "./character_motion";
 import action_layout from "./character_layout";
 import action_se from "./special_effect";
+import { replaceStrings, stringReplacements } from "../StringReplacement";
 
 export default async function single_action(
   controller: Live2DController,
@@ -15,6 +16,15 @@ export default async function single_action(
 ) {
   switch (action.Action) {
     case SnippetAction.SpecialEffect:
+      const action_detail =
+        controller.scenarioData.SpecialEffectData[action.ReferenceIndex];
+      action_detail.StringVal = replaceStrings(
+        action_detail.StringVal,
+        stringReplacements
+      );
+      if (action_detail.StringValSub.startsWith("voice")) {
+        controller.lastAudioStep = controller.currentScenarioStep;
+      }
       await action_se(controller, action);
       break;
     case SnippetAction.CharacterLayout:
@@ -24,6 +34,7 @@ export default async function single_action(
       await action_motion(controller, action);
       break;
     case SnippetAction.Talk:
+      controller.lastAudioStep = controller.currentScenarioStep;
       await action_talk(controller, action);
       break;
     case SnippetAction.Sound:

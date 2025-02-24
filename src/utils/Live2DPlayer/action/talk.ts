@@ -2,6 +2,7 @@ import type { Live2DController } from "../Live2DController";
 import type { Snippet } from "../../../types.d";
 import { Live2DAssetType } from "../types.d";
 import { log } from "../log";
+import { replaceStrings, stringReplacements } from "../StringReplacement";
 
 export default async function action_talk(
   controller: Live2DController,
@@ -13,15 +14,16 @@ export default async function action_talk(
   await controller.layers.telop.hide(200);
   // show dialog
   let dialog;
+  const body = replaceStrings(action_detail.Body, stringReplacements);
   if (controller.settings.text_animation) {
     dialog = controller.layers.dialog.animate(
       action_detail.WindowDisplayName,
-      action_detail.Body
+      body
     );
   } else {
     controller.layers.dialog.draw(
       action_detail.WindowDisplayName,
-      action_detail.Body
+      body
     );
   }
 

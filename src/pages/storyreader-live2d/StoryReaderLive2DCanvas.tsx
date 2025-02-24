@@ -32,13 +32,42 @@ const StoryReaderLive2DCanvas: React.FC<{
   const [autoplayWaiting, setAutoplayWaiting] = useState(false);
   const [loadStatus, setLoadStatus] = useState<LoadStatus>(LoadStatus.Ready);
 
+  // Ref to track the initial touch position
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+
   /**
-   * Next step process:
-   * - triggered by user click:
-   *   - if auto play or already playing: abort player / auto play delay
-   *   - else: next step
-   * - triggered by auto play / model load finish:
-   *   - if not playing: next step
+   * Handles left-to-right swipe to step back.
+   */
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  }, []);
+
+  const handleTouchEnd = useCallback(
+    (e: React.TouchEvent) => {
+      if (!touchStartRef.current) return;
+      const touch = e.changedTouches[0];
+      const deltaX = touch.clientX - touchStartRef.current.x;
+      const deltaY = touch.clientY - touchStartRef.current.y;
+      // A left-to-right swipe: horizontal movement over 50px and minimal vertical movement.
+      if (deltaX > 50 && Math.abs(deltaY) < 30) {
+        console.log("left-to-right swipe");
+        if (loadStatus === LoadStatus.Loaded && scenarioStep > 0) {
+          // Abort any ongoing animation.
+          stage.current?.controller.animate.abort();
+          // Step back one scenario step.
+          const previousStep = scenarioStep - 1;
+          stage.current?.controller.apply_action(previousStep);
+          setScenarioStep(previousStep);
+        }
+      }
+      touchStartRef.current = null;
+    },
+    [loadStatus, scenarioStep]
+  );
+
+  /**
+   * Next step process: triggered by user click or auto play.
    */
   const nextStepClick = useCallback(() => {
     if (!playing && !autoplayWaiting && scenarioStep !== -1) {
@@ -68,7 +97,7 @@ const StoryReaderLive2DCanvas: React.FC<{
     if (scenarioStep === -1) setFinished(true);
   }, [playing, scenarioStep]);
 
-  // autoplay listener
+  // Autoplay listener.
   useEffect(() => {
     if (loadStatus === LoadStatus.Loaded && settings.autoplay && !playing) {
       setAutoplayWaiting(true);
@@ -79,7 +108,7 @@ const StoryReaderLive2DCanvas: React.FC<{
     }
   }, [settings.autoplay, loadStatus, playing]);
 
-  // other settings listeners
+  // Other settings listeners.
   useEffect(
     () =>
       stage.current?.controller.set_volume({
@@ -124,7 +153,6 @@ const StoryReaderLive2DCanvas: React.FC<{
     (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
-
       if (
         loadStatus === LoadStatus.Loaded &&
         scenarioStep !== -1 &&
@@ -147,13 +175,10 @@ const StoryReaderLive2DCanvas: React.FC<{
    */
   const handleWheel = useCallback(
     (e: React.WheelEvent) => {
-      // Check for upward scrolling (scroll back)
       if (e.deltaY < 0) {
         // e.preventDefault();
         e.stopPropagation();
-
         if (loadStatus === LoadStatus.Loaded && scenarioStep > 0) {
-          // Abort any ongoing animation.
           stage.current?.controller.animate.abort();
 
           // If there's saved history, pop the last state and restore it.
@@ -217,7 +242,13 @@ const StoryReaderLive2DCanvas: React.FC<{
           {t("story_reader_live2d:progress.load_model_to_canvas")}
         </Typography>
       )}
-      <div ref={wrap} style={{ position: "relative" }}>
+      {/* Attach touch event handlers to the wrapping div */}
+      <div
+        ref={wrap}
+        style={{ position: "relative" }}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         <Stage
           width={stageSize[0]}
           height={stageSize[1]}

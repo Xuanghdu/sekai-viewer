@@ -36,7 +36,7 @@ const StoryReaderLive2DCanvas: React.FC<{
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
   /**
-   * Handles left-to-right swipe to step back.
+   * Handles left-to-right swipe to step back to the last audio step.
    */
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     const touch = e.touches[0];
@@ -49,16 +49,31 @@ const StoryReaderLive2DCanvas: React.FC<{
       const touch = e.changedTouches[0];
       const deltaX = touch.clientX - touchStartRef.current.x;
       const deltaY = touch.clientY - touchStartRef.current.y;
-      // A left-to-right swipe: horizontal movement over 50px and minimal vertical movement.
+      // Detect left-to-right swipe: horizontal movement over 50px with minimal vertical movement.
       if (deltaX > 50 && Math.abs(deltaY) < 30) {
         console.log("left-to-right swipe");
         if (loadStatus === LoadStatus.Loaded && scenarioStep > 0) {
           // Abort any ongoing animation.
           stage.current?.controller.animate.abort();
-          // Step back one scenario step.
+          console.log(
+            "stage.current?.controller.lastAudioStep",
+            stage.current?.controller.lastAudioStep
+          );
+          console.log("scenarioStep", scenarioStep);
+          if (
+            stage.current?.controller.lastAudioStep !== null &&
+            scenarioStep > stage.current?.controller.lastAudioStep
+          ) {
+            console.log("replay last audio step");
+            stage.current?.controller.apply_action(
+              stage.current.controller.lastAudioStep
+            );
+            setScenarioStep(stage.current?.controller.lastAudioStep-1);
+          }
           const previousStep = scenarioStep - 1;
-          stage.current?.controller.apply_action(previousStep);
+          // stage.current?.controller.apply_action(previousStep);
           setScenarioStep(previousStep);
+          console.log("scenarioStep", scenarioStep);
         }
       }
       touchStartRef.current = null;
@@ -70,6 +85,8 @@ const StoryReaderLive2DCanvas: React.FC<{
    * Next step process: triggered by user click or auto play.
    */
   const nextStepClick = useCallback(() => {
+    console.log("nextStepClick");
+    console.log("scenarioStep", scenarioStep);
     if (!playing && !autoplayWaiting && scenarioStep !== -1) {
       setPlaying(true);
       stage.current?.controller

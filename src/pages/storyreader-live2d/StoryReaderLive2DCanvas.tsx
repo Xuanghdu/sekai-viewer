@@ -50,7 +50,7 @@ const StoryReaderLive2DCanvas: React.FC<{
       const deltaX = touch.clientX - touchStartRef.current.x;
       const deltaY = touch.clientY - touchStartRef.current.y;
       // Detect left-to-right swipe: horizontal movement over 50px with minimal vertical movement.
-      if (deltaX > 50 && Math.abs(deltaY) < 30) {
+      if (deltaX > 50) {
         console.log("left-to-right swipe");
         if (
           loadStatus === LoadStatus.Loaded &&
@@ -66,7 +66,7 @@ const StoryReaderLive2DCanvas: React.FC<{
         }
       }
       // Detect down-to-up swipe: vertical movement over 50px with minimal horizontal movement.
-      else if (Math.abs(deltaX) < 30 && deltaY < -50) {
+      else if (deltaY < -50) {
         console.log("down-to-up swipe");
         if (
           loadStatus === LoadStatus.Loaded &&

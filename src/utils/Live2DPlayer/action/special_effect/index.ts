@@ -41,7 +41,10 @@ export default async function action_se(
 ) {
   const action_detail =
     controller.scenarioData.SpecialEffectData[action.ReferenceIndex];
-  console.log(action_detail.EffectType)
+    console.log(
+      "action_detail.EffectType",
+      SpecialEffectType[action_detail.EffectType]
+    );
   switch (action_detail.EffectType) {
     case SpecialEffectType.ChangeBackground:
       await ChangeBackground(controller, action);

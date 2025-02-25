@@ -30,18 +30,15 @@ const StoryReaderLive2DCanvas: React.FC<{
   const [finished, setFinished] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [autoplayWaiting, setAutoplayWaiting] = useState(false);
-  // const [canClick, setCanClick] = useState(true);
   const [loadStatus, setLoadStatus] = useState<LoadStatus>(LoadStatus.Ready);
 
   /**
-   * next step process:
-   * - triggered by user click
-   *   - auto play = true or autoplayWaiting = true or playing = true
-   *     - abort player / auto play delay
-   *   - else
-   *     - next step
-   * - triggered by auto play / model load finish
-   *   - playing = false -> next step
+   * Next step process:
+   * - triggered by user click:
+   *   - if auto play or already playing: abort player / auto play delay
+   *   - else: next step
+   * - triggered by auto play / model load finish:
+   *   - if not playing: next step
    */
   const nextStepClick = useCallback(() => {
     if (!playing && !autoplayWaiting && scenarioStep !== -1) {
@@ -82,7 +79,7 @@ const StoryReaderLive2DCanvas: React.FC<{
     }
   }, [settings.autoplay, loadStatus, playing]);
 
-  // other settings listener
+  // other settings listeners
   useEffect(
     () =>
       stage.current?.controller.set_volume({
@@ -114,19 +111,14 @@ const StoryReaderLive2DCanvas: React.FC<{
    */
   const handlePlayClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    // e.preventDefault();
-    // if (loadStatus === LoadStatus.Loaded && canClick) {
     if (loadStatus === LoadStatus.Loaded) {
       nextStepClick();
-      // setCanClick(false);
-      // setTimeout(() => {
-      //   setCanClick(true);
-      // }, 300);
     }
   };
 
   /**
-   * Handles right click to replay the previous audio step.
+   * Handles right click to replay the last audio step.
+   * Restores the state to the last saved entry without removing it.
    */
   const handleRightClick = useCallback(
     (e: React.MouseEvent) => {
@@ -135,53 +127,52 @@ const StoryReaderLive2DCanvas: React.FC<{
 
       if (
         loadStatus === LoadStatus.Loaded &&
-        // canClick &&
         scenarioStep !== -1 &&
-        stage.current?.controller.lastAudioStep !== null
+        stage.current?.controller.actionHistory.length
       ) {
-        // Abort any ongoing animation.
         stage.current?.controller.animate.abort();
-        // Replay the last audio action.
-        stage.current?.controller.apply_action(
-          stage.current.controller.lastAudioStep
-        );
-        // setCanClick(false);
-        // setTimeout(() => {
-        //   setCanClick(true);
-        // }, 300);
+        const previousStep = stage.current.controller.actionHistory.pop();
+        if (previousStep !== undefined) {
+          stage.current?.controller.apply_action(previousStep);
+          setScenarioStep(previousStep);
+        }
       }
     },
-    // [canClick, loadStatus, scenarioStep]
     [loadStatus, scenarioStep]
   );
 
   /**
    * Handles mouse wheel event.
-   * If the user scrolls upward (negative deltaY), we step back one scenario step.
+   * If the user scrolls upward (negative deltaY), we step back one saved state.
    */
   const handleWheel = useCallback(
     (e: React.WheelEvent) => {
       // Check for upward scrolling (scroll back)
       if (e.deltaY < 0) {
-        e.preventDefault();
+        // e.preventDefault();
         e.stopPropagation();
 
-        // if (loadStatus === LoadStatus.Loaded && canClick && scenarioStep > 0) {
         if (loadStatus === LoadStatus.Loaded && scenarioStep > 0) {
           // Abort any ongoing animation.
           stage.current?.controller.animate.abort();
-          // Step back one scenario step.
-          const previousStep = scenarioStep - 1;
-          stage.current?.controller.apply_action(previousStep);
-          setScenarioStep(previousStep);
-          // setCanClick(false);
-          // setTimeout(() => {
-          //   setCanClick(true);
-          // }, 300);
+
+          // If there's saved history, pop the last state and restore it.
+          if (stage.current?.controller.actionHistory.length) {
+            stage.current.controller.actionHistory.pop();
+            const previousStep = stage.current.controller.actionHistory.pop();
+            if (previousStep !== undefined) {
+              stage.current?.controller.apply_action(previousStep);
+              setScenarioStep(previousStep);
+            }
+          } else {
+            // Fallback: simply decrement the scenario step.
+            const previousStep = scenarioStep - 1;
+            stage.current?.controller.apply_action(previousStep);
+            setScenarioStep(previousStep);
+          }
         }
       }
     },
-    // [canClick, loadStatus, scenarioStep]
     [loadStatus, scenarioStep]
   );
 
@@ -236,7 +227,7 @@ const StoryReaderLive2DCanvas: React.FC<{
             autoDensity: true,
           }}
           onClick={handlePlayClick}
-          onContextMenu={handleRightClick} // Right click will replay current step.
+          onContextMenu={handleRightClick} // Right click replays the last audio step.
           onWheel={handleWheel}
         >
           {controllerData && (

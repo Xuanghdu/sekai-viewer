@@ -15,7 +15,7 @@ export default async function single_action(
   action: Snippet
 ) {
   switch (action.Action) {
-    case SnippetAction.SpecialEffect:
+    case SnippetAction.SpecialEffect: {
       const action_detail =
         controller.scenarioData.SpecialEffectData[action.ReferenceIndex];
       action_detail.StringVal = replaceStrings(
@@ -23,10 +23,11 @@ export default async function single_action(
         stringReplacements
       );
       if (action_detail.StringValSub.startsWith("voice")) {
-        controller.lastAudioStep = controller.currentScenarioStep;
+        controller.pushHistory(controller.currentScenarioStep);
       }
       await action_se(controller, action);
       break;
+    }
     case SnippetAction.CharacterLayout:
       await action_layout(controller, action);
       break;
@@ -34,7 +35,7 @@ export default async function single_action(
       await action_motion(controller, action);
       break;
     case SnippetAction.Talk:
-      controller.lastAudioStep = controller.currentScenarioStep;
+      controller.pushHistory(controller.currentScenarioStep);
       await action_talk(controller, action);
       break;
     case SnippetAction.Sound:

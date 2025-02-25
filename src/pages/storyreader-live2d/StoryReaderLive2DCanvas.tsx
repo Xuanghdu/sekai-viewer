@@ -52,28 +52,34 @@ const StoryReaderLive2DCanvas: React.FC<{
       // Detect left-to-right swipe: horizontal movement over 50px with minimal vertical movement.
       if (deltaX > 50 && Math.abs(deltaY) < 30) {
         console.log("left-to-right swipe");
-        if (loadStatus === LoadStatus.Loaded && scenarioStep > 0) {
-          // Abort any ongoing animation.
+        if (
+          loadStatus === LoadStatus.Loaded &&
+          scenarioStep !== -1 &&
+          stage.current?.controller.actionHistory.length
+        ) {
           stage.current?.controller.animate.abort();
-          console.log(
-            "stage.current?.controller.lastAudioStep",
-            stage.current?.controller.lastAudioStep
-          );
-          console.log("scenarioStep", scenarioStep);
-          if (
-            stage.current?.controller.lastAudioStep !== null &&
-            scenarioStep > stage.current?.controller.lastAudioStep
-          ) {
-            console.log("replay last audio step");
-            stage.current?.controller.apply_action(
-              stage.current.controller.lastAudioStep
-            );
-            setScenarioStep(stage.current?.controller.lastAudioStep-1);
+          const previousStep = stage.current.controller.actionHistory.pop();
+          if (previousStep !== undefined) {
+            stage.current?.controller.apply_action(previousStep);
+            setScenarioStep(previousStep);
           }
-          const previousStep = scenarioStep - 1;
-          // stage.current?.controller.apply_action(previousStep);
-          setScenarioStep(previousStep);
-          console.log("scenarioStep", scenarioStep);
+        }
+      }
+      // Detect down-to-up swipe: vertical movement over 50px with minimal horizontal movement.
+      else if (Math.abs(deltaX) < 30 && deltaY < -50) {
+        console.log("down-to-up swipe");
+        if (
+          loadStatus === LoadStatus.Loaded &&
+          scenarioStep > 0 &&
+          stage.current?.controller.actionHistory.length
+        ) {
+          stage.current?.controller.animate.abort();
+          stage.current.controller.actionHistory.pop();
+          const previousStep = stage.current.controller.actionHistory.pop();
+          if (previousStep !== undefined) {
+            stage.current?.controller.apply_action(previousStep);
+            setScenarioStep(previousStep);
+          }
         }
       }
       touchStartRef.current = null;
@@ -195,20 +201,15 @@ const StoryReaderLive2DCanvas: React.FC<{
       if (e.deltaY < 0) {
         // e.preventDefault();
         e.stopPropagation();
-        if (loadStatus === LoadStatus.Loaded && scenarioStep > 0) {
+        if (
+          loadStatus === LoadStatus.Loaded &&
+          scenarioStep > 0 &&
+          stage.current?.controller.actionHistory.length
+        ) {
           stage.current?.controller.animate.abort();
-
-          // If there's saved history, pop the last state and restore it.
-          if (stage.current?.controller.actionHistory.length) {
-            stage.current.controller.actionHistory.pop();
-            const previousStep = stage.current.controller.actionHistory.pop();
-            if (previousStep !== undefined) {
-              stage.current?.controller.apply_action(previousStep);
-              setScenarioStep(previousStep);
-            }
-          } else {
-            // Fallback: simply decrement the scenario step.
-            const previousStep = scenarioStep - 1;
+          stage.current.controller.actionHistory.pop();
+          const previousStep = stage.current.controller.actionHistory.pop();
+          if (previousStep !== undefined) {
             stage.current?.controller.apply_action(previousStep);
             setScenarioStep(previousStep);
           }

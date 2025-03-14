@@ -125,10 +125,12 @@ export default async function action_se(
       await BlackWipeOutBottom(controller, action);
       break;
     case SpecialEffectType.SekaiIn:
-      await SekaiIn(controller, action);
+      // await SekaiIn(controller, action);
+      await BlackIn(controller, action);
       break;
     case SpecialEffectType.SekaiOut:
-      await SekaiOut(controller, action);
+      // await SekaiOut(controller, action);
+      await BlackOut(controller, action);
       break;
     case SpecialEffectType.FullScreenText:
       await FullScreenText(controller, action);

@@ -231,6 +231,7 @@ const MusicRecommend: React.FC<unknown> = () => {
             link: `/music/${music.id}`,
             mid: meta.music_id,
             name: music.title,
+            // name: music.infos[0].title,
             result: score,
           } as IMusicRecommendResult;
         })
@@ -269,6 +270,10 @@ const MusicRecommend: React.FC<unknown> = () => {
           //   meta.skill_score_solo
           // );
 
+          // console.log(meta)
+
+
+
           return {
             combo: meta.combo,
             difficulty: meta.difficulty,
@@ -277,7 +282,8 @@ const MusicRecommend: React.FC<unknown> = () => {
             level: meta.level,
             link: `/music/${music.id}`,
             mid: meta.music_id,
-            name: music.title,
+            // name: music.title,
+            name: music.infos[0]?.title || music.title,
             result: [worstScore, bestScore],
           } as IMusicRecommendResult;
         })
@@ -505,7 +511,7 @@ const MusicRecommend: React.FC<unknown> = () => {
                   </Grid>
                 </Grid>
                 <Grid item>
-                  <div style={{ height: 650 }}>
+                  <div style={{ height: 3900 }}>
                     <DataGrid
                       pagination
                       autoPageSize

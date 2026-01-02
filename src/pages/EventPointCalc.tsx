@@ -294,22 +294,30 @@ const EventPointCalc: React.FC<unknown> = () => {
       {
         field: "level",
         headerName: t("music:difficulty"),
+        // renderCell(params) {
+        //   return (
+        //     <ChipDifficulty
+        //       difficulty={params.row.difficulty}
+        //       value={params.value}
+        //     />
+        //   );
+        // },
         renderCell(params) {
           return (
-            <ChipDifficulty
-              difficulty={params.row.difficulty}
-              value={params.value}
+            <ContentTrans
+              contentKey={`music_difficulties:${params.row.difficulty}`}
+              original={params.row.difficulty as string}
             />
           );
         },
         width: 100,
       },
-      {
-        align: "center",
-        field: "duration",
-        headerName: t("music:actualPlaybackTime"),
-        width: 150,
-      },
+      // {
+      //   align: "center",
+      //   field: "duration",
+      //   headerName: t("music:actualPlaybackTime"),
+      //   width: 150,
+      // },
       {
         align: "center",
         field: "result",
@@ -317,17 +325,17 @@ const EventPointCalc: React.FC<unknown> = () => {
         sortDirection: "desc",
         width: 100,
       },
-      {
-        // sortDirection: "desc",
-        align: "center",
+      // {
+      //   // sortDirection: "desc",
+      //   align: "center",
 
-        field: "resultPerHour",
+      //   field: "resultPerHour",
 
-        headerName: t("event_calc:result.perHour"),
+      //   headerName: t("event_calc:result.perHour"),
 
-        hide: playMode === "challenge_live",
-        width: 100,
-      },
+      //   hide: playMode === "challenge_live",
+      //   width: 100,
+      // },
     ],
     [playMode, t]
   );
@@ -419,13 +427,18 @@ const EventPointCalc: React.FC<unknown> = () => {
           );
           const result = eventPoint;
 
+          // console.log(music)
+          // console.log(meta)
+
           return {
             difficulty: meta.difficulty,
             duration: meta.music_time,
             id: i,
             level: meta.level,
             mid: music.id,
-            name: music.title,
+            // name: music.title,
+            name: music.infos[0]?.title || music.title,
+            // name: meta.music_id.toString() + " " + music.infos[0]?.title || music.title,
             result: result,
             resultPerHour: Math.floor((result / (meta.music_time + 30)) * 3600),
           };
@@ -1003,7 +1016,7 @@ const EventPointCalc: React.FC<unknown> = () => {
                 </ContainerContent>
               )}
               {selectedMusicMode === "all_songs" && (
-                <div style={{ height: 650 }}>
+                <div style={{ height: 2750 }}>
                   <DataGrid
                     pagination
                     autoPageSize

@@ -340,6 +340,121 @@ export function useMusicMeta() {
   return [data];
 }
 
+function isIgnoredMeta(meta: IMusicMeta) {
+  const ignoredMeta = [
+    {
+      music_id: 226,
+      difficulty: "hard",
+    },
+    {
+      music_id: 448,
+      difficulty: "normal",
+    },
+    {
+      music_id: 379,
+      difficulty: "hard",
+    },
+    {
+      music_id: 448,
+      difficulty: "easy",
+    },
+    {
+      music_id: 292,
+      difficulty: "expert",
+    },
+    {
+      music_id: 186,
+      difficulty: "easy",
+    },
+    {
+      music_id: 326,
+      difficulty: "expert",
+    },
+    {
+      music_id: 48,
+      difficulty: "hard",
+    },
+    {
+      music_id: 258,
+      difficulty: "hard",
+    },
+    {
+      music_id: 354,
+      difficulty: "hard",
+    },
+    {
+      music_id: 354,
+      difficulty: "normal",
+    },
+    {
+      music_id: 235,
+      difficulty: "hard",
+    },
+    {
+      music_id: 164,
+      difficulty: "hard",
+    },
+    {
+      music_id: 226,
+      difficulty: "normal",
+    },
+    {
+      music_id: 365,
+      difficulty: "expert",
+    },
+    {
+      music_id: 186,
+      difficulty: "normal",
+    },
+    {
+      music_id: 326,
+      difficulty: "hard",
+    },
+    {
+      music_id: 379,
+      difficulty: "easy",
+    },
+    {
+      music_id: 169,
+      difficulty: "easy",
+    },
+    {
+      music_id: 169,
+      difficulty: "normal",
+    },
+    {
+      music_id: 169,
+      difficulty: "hard",
+    },
+    {
+      music_id: 206,
+      difficulty: "hard",
+    },
+    {
+      music_id: 292,
+      difficulty: "hard",
+    },
+    {
+      music_id: 48,
+      difficulty: "normal",
+    },
+    {
+      music_id: 270,
+      difficulty: "expert",
+    },
+    {
+      music_id: 301,
+      difficulty: "normal",
+    },
+    { music_id: 461,
+      difficulty: "normal",
+    },
+  ]
+  console.log("Ignoreing ", meta.music_id, meta.difficulty)
+  return ignoredMeta.some((ignored) => ignored.music_id === meta.music_id && ignored.difficulty === meta.difficulty)
+  // return false;
+}
+
 export function filterMusicMeta(
   metas: IMusicMeta[],
   musicDifficulties: IMusicDifficultyInfo[]
@@ -348,7 +463,10 @@ export function filterMusicMeta(
     musicDifficulties.some(
       (music) =>
         music.musicId === meta.music_id &&
-        music.musicDifficulty === meta.difficulty
+        music.musicDifficulty === meta.difficulty &&
+        music.playLevel <= 26 &&
+        music.musicDifficulty !== "append" &&
+        !isIgnoredMeta(meta)
     )
   );
 }

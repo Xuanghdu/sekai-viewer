@@ -22,6 +22,9 @@ const VirtualLiveStepMusic: React.FC<{
   const [musicVocal, setMusicVocal] = useState<IMusicVocalInfo>();
   const [musicVocalURL, setMusicVocalURL] = useState<string>("");
 
+  console.log("musics", musics);
+  console.log("musicVocals", musicVocals);
+
   useLayoutEffect(() => {
     if (musics && musicVocal) {
       // for compatibility with tw, kr server
